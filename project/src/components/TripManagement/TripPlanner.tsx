@@ -4,7 +4,13 @@ import { MapPin, Calendar, User, Car, Route } from 'lucide-react';
 import { useStore } from '../../store';
 import { Trip } from '../../types';
 
-export default function TripPlanner() {
+interface TripProps{
+  onSubmit: (trip: Omit<Trip, 'id'>) => void;
+  onClose: () => void;
+  initialData?: Trip;
+}
+
+export default function TripPlanner({ onSubmit, onClose, initialData }: TripProps) {
   const navigate = useNavigate();
   const vehicles = useStore((state) => state.vehicles.filter(v => v.status === 'available'));
   const drivers = useStore((state) => state.drivers.filter(d => d.status === 'available'));
@@ -13,16 +19,16 @@ export default function TripPlanner() {
   const updateDriver = useStore((state) => state.updateDriver);
 
   const [formData, setFormData] = useState<Omit<Trip, 'id'>>({
-    vehicleId: '',
-    driverId: '',
-    startTime: new Date().toISOString().slice(0, 16),
-    endTime: '',
-    startLocation: '',
-    endLocation: '',
-    distance: 0,
+    vehicleId: initialData?.vehicleId ||  '',
+    driverId: initialData?.driverId || '',
+    startTime: initialData?.startTime || new Date().toISOString().slice(0, 16),
+    endTime: initialData?.endTime || '',
+    startLocation: initialData?.startLocation || '',
+    endLocation: initialData?.endLocation || '',
+    distance: initialData?.distance || 0,
     status: 'planned',
-    purpose: '',
-    notes: ''
+    purpose: initialData?.purpose || '',
+    notes: initialData?.notes || ''
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -30,6 +36,7 @@ export default function TripPlanner() {
     
     // Add the trip
     addTrip(formData);
+    // onSubmit(formData);
 
     // Update vehicle and driver status
     updateVehicle(formData.vehicleId, { status: 'in-use' });
@@ -45,7 +52,9 @@ export default function TripPlanner() {
     <div className="max-w-3xl mx-auto">
       <div className="bg-white shadow rounded-lg">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">Plan New Trip</h2>
+          <h2 className="text-2xl font-bold text-gray-900">
+            {initialData ? 'Edit the trip' : 'Plan new trip'}
+          </h2>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -201,7 +210,7 @@ export default function TripPlanner() {
           <div className="flex justify-end space-x-3">
             <button
               type="button"
-              onClick={() => navigate('/trips')}
+              onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
             >
               Cancel
@@ -210,7 +219,7 @@ export default function TripPlanner() {
               type="submit"
               className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
             >
-              Plan Trip
+              {initialData ? 'Update trip' : 'Add trip'}
             </button>
           </div>
         </form>

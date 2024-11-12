@@ -1,18 +1,19 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   MapPin, Calendar, User, Car, Route, Clock, 
-  AlertTriangle, CheckCircle, XCircle, Edit2 
+  AlertTriangle, CheckCircle, XCircle, Edit2, Trash2 
 } from 'lucide-react';
 import { useStore } from '../../store';
-import StatusBadge from '../shared/StatusBadge';
 import { format } from 'date-fns';
+import StatusBadge from '../shared/StatusBadge';
+import TripPlanner from './TripPlanner';
 
 export default function TripDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [action, setAction] = useState<'start' | 'complete' | 'cancel' | null>(null);
+  const [action, setAction] = useState<'start' | 'complete' | 'cancel' | 'delete' | 'edit' | null>(null);
 
   const trip = useStore((state) => state.trips.find(t => t.id === id));
   const vehicle = useStore((state) => 
@@ -22,8 +23,11 @@ export default function TripDetails() {
     state.drivers.find(d => d.id === trip?.driverId)
   );
   const updateTrip = useStore((state) => state.updateTrip);
+  const deleteTrip = useStore((state) => state.removeTrip);
   const updateVehicle = useStore((state) => state.updateVehicle);
   const updateDriver = useStore((state) => state.updateDriver);
+
+  const [showEditForm, setShowEditForm] = useState(false);
 
   if (!trip || !vehicle || !driver) {
     return (
@@ -33,7 +37,7 @@ export default function TripDetails() {
     );
   }
 
-  const handleTripAction = (action: 'start' | 'complete' | 'cancel') => {
+  const handleTripAction = (action: 'start' | 'complete' | 'cancel' | 'delete' | 'edit') => {
     setAction(action);
     setShowConfirmation(true);
   };
@@ -60,6 +64,16 @@ export default function TripDetails() {
         updateVehicle(vehicle.id, { status: 'available' });
         updateDriver(driver.id, { status: 'available' });
         break;
+      case 'delete':
+        deleteTrip(trip.id);
+        navigate('/trips');  
+        break;
+        //edit functionality not written
+      case 'edit':
+        updateVehicle(vehicle.id, { status: 'available' });
+        updateDriver(driver.id, { status: 'available' });  
+        setShowEditForm(true);
+        break;
     }
 
     setShowConfirmation(false);
@@ -68,7 +82,8 @@ export default function TripDetails() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="bg-white shadow rounded-lg">
+      {!showEditForm && (
+        <div className="bg-white shadow rounded-lg">
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold text-gray-900">Trip Details</h2>
@@ -182,18 +197,25 @@ export default function TripDetails() {
             {trip.status === 'planned' && (
               <>
                 <button
-                  onClick={() => handleTripAction('start')}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Start Trip
-                </button>
-                <button
                   onClick={() => handleTripAction('cancel')}
                   className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
                 >
                   <XCircle className="h-4 w-4 mr-2" />
                   Cancel Trip
+                </button>
+                <button
+                  onClick={() => handleTripAction('edit')}
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                >
+                  <Edit2 className="h-4 w-4 mr-2" />
+                  Edit Trip
+                </button>
+                <button
+                  onClick={() => handleTripAction('start')}
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Start Trip
                 </button>
               </>
             )}
@@ -206,9 +228,31 @@ export default function TripDetails() {
                 Complete Trip
               </button>
             )}
+            {(trip.status === 'cancelled' || trip.status === 'completed') && (
+              <button
+                onClick={() => handleTripAction('delete')}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Trip
+              </button>
+            )}
           </div>
         </div>
       </div>
+      )}
+
+      {
+        showEditForm && (
+          <TripPlanner 
+            initialData={trip}
+            onSubmit={(data) => {
+              updateTrip(trip.id, data)
+            }}
+            onClose={() => setShowEditForm(false)}
+          />
+        )
+      }
 
       {showConfirmation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
@@ -221,6 +265,8 @@ export default function TripDetails() {
               {action === 'start' && 'Are you sure you want to start this trip?'}
               {action === 'complete' && 'Are you sure you want to mark this trip as completed?'}
               {action === 'cancel' && 'Are you sure you want to cancel this trip?'}
+              {action === 'delete' && 'Are you sure you want to delete this trip? This action cannot be undone.'}
+              {action === 'edit' && 'Are you sure you want to edit this trip?'}
             </p>
             <div className="flex justify-end space-x-3">
               <button

@@ -17,6 +17,7 @@ interface AppState {
   removeDriver: (id: string) => void;
   addTrip: (trip: Omit<Trip, 'id'>) => void;
   updateTrip: (id: string, trip: Partial<Trip>) => void;
+  removeTrip: (id: string) => void;
   addMaintenanceRecord: (record: Omit<MaintenanceRecord, 'id'>) => void;
   updateInventory: (id: string, changes: Partial<InventoryItem>) => void;
   addAlert: (alert: Omit<Alert, 'id'>) => void;
@@ -69,6 +70,11 @@ export const useStore = create<AppState>((set) => ({
   updateTrip: (id, trip) =>
     set((state) => ({
       trips: state.trips.map((t) => (t.id === id ? { ...t, ...trip } : t)),
+    })),
+
+  removeTrip: (id) =>
+    set((state) => ({
+      trips: state.trips.filter((t) => t.id !== id),
     })),
 
   addMaintenanceRecord: (record) =>
