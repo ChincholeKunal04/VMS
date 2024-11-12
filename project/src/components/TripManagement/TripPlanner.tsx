@@ -15,6 +15,7 @@ export default function TripPlanner({ onSubmit, onClose, initialData }: TripProp
   const vehicles = useStore((state) => state.vehicles.filter(v => v.status === 'available'));
   const drivers = useStore((state) => state.drivers.filter(d => d.status === 'available'));
   const addTrip = useStore((state) => state.addTrip);
+  const updateTrip = useStore((state) => state.updateTrip);
   const updateVehicle = useStore((state) => state.updateVehicle);
   const updateDriver = useStore((state) => state.updateDriver);
 
@@ -34,9 +35,8 @@ export default function TripPlanner({ onSubmit, onClose, initialData }: TripProp
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Add the trip
-    addTrip(formData);
-    // onSubmit(formData);
+    // Add or u[date the trip
+    initialData ? updateTrip(initialData.id ,formData) : addTrip(formData);
 
     // Update vehicle and driver status
     updateVehicle(formData.vehicleId, { status: 'in-use' });

@@ -10,6 +10,8 @@ export default function TripList() {
   const [statusFilter, setStatusFilter] = useState('');
 
   const trips = useStore((state) => state.trips);
+  console.log(trips);
+  
   const vehicles = useStore((state) => state.vehicles);
   const drivers = useStore((state) => state.drivers);
 
@@ -30,6 +32,7 @@ export default function TripList() {
 
   return (
     <div>
+      
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Trip Management</h1>
         <Link
