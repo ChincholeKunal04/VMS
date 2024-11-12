@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Edit2, Trash2, AlertTriangle } from 'lucide-react';
 import { useStore } from '../../store';
-// import VehicleForm from './VehicleForm';
+import VehicleForm from './VehicleForm';
 import StatusBadge from '../shared/StatusBadge';
 
 export default function VehicleDetails() {
@@ -132,7 +132,7 @@ export default function VehicleDetails() {
         </div>
       </div>
 
-      {/* {showEditForm && (
+      {showEditForm && (
         <VehicleForm
           initialData={vehicle}
           onSubmit={(data) => {
@@ -141,7 +141,7 @@ export default function VehicleDetails() {
           }}
           onClose={() => setShowEditForm(false)}
         />
-      )} */}
+      )}
 
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">

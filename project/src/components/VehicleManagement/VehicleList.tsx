@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Search, Filter, Car } from 'lucide-react';
 import { useStore } from '../../store';
-// import VehicleForm from './VehicleForm';
+import VehicleForm from './VehicleForm';
 import StatusBadge from '../shared/StatusBadge';
 
 export default function VehicleList() {
@@ -125,7 +125,7 @@ export default function VehicleList() {
         </div>
       </div>
 
-      {/* {showAddForm && (
+      {showAddForm && (
         <VehicleForm
           onSubmit={(data) => {
             addVehicle(data);
@@ -133,7 +133,7 @@ export default function VehicleList() {
           }}
           onClose={() => setShowAddForm(false)}
         />
-      )} */}
+      )}
     </div>
   );
 }
