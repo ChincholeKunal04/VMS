@@ -5,7 +5,7 @@ import Dashboard from './components/Dashboard';
 import VehicleManagement from './components/VehicleManagement';
 import DriverManagement from './components/DriverManagement';
 import TripManagement from './components/TripManagement';
-// import MaintenanceManagement from './components/MaintenanceManagement';
+import MaintenanceManagement from './components/MaintenanceManagement';
 // import InventoryManagement from './components/InventoryManagement';
 import Analytics from './components/Analytics';
 // import AlertCenter from './components/AlertCenter';
@@ -21,7 +21,7 @@ function App() {
             <Route path="/vehicles/*" element={<VehicleManagement />} />
             <Route path="/drivers/*" element={<DriverManagement />} />
             <Route path="/trips/*" element={<TripManagement />} />
-            {/* <Route path="/maintenance/*" element={<MaintenanceManagement />} /> */}
+            <Route path="/maintenance/*" element={<MaintenanceManagement />} />
             {/* <Route path="/inventory/*" element={<InventoryManagement />} /> */}
             <Route path="/analytics" element={<Analytics />} />
             {/* <Route path="/alerts" element={<AlertCenter />} /> */}

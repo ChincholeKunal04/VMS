@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface StatusBadgeProps {
-  status: 'available' | 'in-use' | 'maintenance' | 'on-trip' | 'off-duty' | 'planned' | 'in-progress' | 'completed' | 'cancelled';
+  status: 'available' | 'in-use' | 'maintenance' | 'on-trip' | 'off-duty' | 'planned' | 'in-progress' | 'completed' | 'cancelled' | 'scheduled';
 }
 
 export default function StatusBadge({ status }: StatusBadgeProps) {
@@ -19,6 +19,7 @@ export default function StatusBadge({ status }: StatusBadgeProps) {
       case 'cancelled':
         return 'bg-gray-100 text-gray-800';
       case 'planned':
+      case 'scheduled':
         return 'bg-yellow-100 text-yellow-800';
       case 'completed':
         return 'bg-green-100 text-green-800';

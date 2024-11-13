@@ -19,6 +19,8 @@ interface AppState {
   updateTrip: (id: string, trip: Partial<Trip>) => void;
   removeTrip: (id: string) => void;
   addMaintenanceRecord: (record: Omit<MaintenanceRecord, 'id'>) => void;
+  updateMaintenanceRecord: (id: string, record: Partial<MaintenanceRecord>) => void;
+  removeMaintenanceRecord: (id: string) => void;
   updateInventory: (id: string, changes: Partial<InventoryItem>) => void;
   addAlert: (alert: Omit<Alert, 'id'>) => void;
   updateAlertStatus: (id: string, status: Alert['status']) => void;
@@ -82,7 +84,17 @@ export const useStore = create<AppState>((set) => ({
       maintenanceRecords: [
         ...state.maintenanceRecords,
         { ...record, id: `m${state.maintenanceRecords.length + 1}` },
-      ],
+      ],  
+    })),
+
+  updateMaintenanceRecord: (id, record) =>
+    set((state) => ({
+      maintenanceRecords: state.maintenanceRecords.map((r) => (r.id === id ? {...r, ...record} : r)),
+    })),
+
+  removeMaintenanceRecord: (id) =>
+    set((state) => ({
+      maintenanceRecords: state.maintenanceRecords.filter((r) => r.id !== id),
     })),
 
   updateInventory: (id, changes) =>
