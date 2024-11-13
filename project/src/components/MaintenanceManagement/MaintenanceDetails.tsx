@@ -29,9 +29,30 @@ export default function MaintenanceDetails() {
     );
   }
 
+  const handleStatusChange = (newStatus: MaintenanceRecord['status']) => {
+    if (!maintenanceRecord || !vehicle) return;
+
+    // Update vehicle status based on maintenance status
+    if (newStatus === 'in-progress') {
+      updateVehicle(vehicle.id, { status: 'maintenance' });
+    } else if (newStatus === 'completed' || newStatus === 'cancelled') {
+      updateVehicle(vehicle.id, { status: 'available' });
+    }
+    updateMaintenanceRecord(maintenanceRecord.id, {
+        ...maintenanceRecord,
+        status: newStatus
+    });
+  };
+
   const handleDelete = () => {
-    removeMaintenanceRecord(maintenanceRecord.id);
-    navigate('/maintenance');
+    if (maintenanceRecord && vehicle) {
+      // If deleting an in-progress maintenance, set vehicle back to available
+      if (maintenanceRecord.status === 'in-progress') {
+        updateVehicle(vehicle.id, { status: 'available' });
+      }
+      removeMaintenanceRecord(maintenanceRecord.id);
+      navigate('/maintenance');
+    }
   };
 
   return (

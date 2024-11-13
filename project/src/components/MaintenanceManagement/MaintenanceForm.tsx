@@ -12,6 +12,7 @@ interface MaintenanceFormProps {
 export default function MaintenanceForm({ onSubmit, onClose, initialData }: MaintenanceFormProps) {
   const vehicles = useStore((state) => state.vehicles);
   const inventory = useStore((state) => state.inventory);
+  const updateVehicle = useStore((state) => state.updateVehicle);
 
   const [formData, setFormData] = useState<Omit<MaintenanceRecord, 'id'>>({
     vehicleId: initialData?.vehicleId || '',
@@ -27,8 +28,20 @@ export default function MaintenanceForm({ onSubmit, onClose, initialData }: Main
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Update vehicle status based on maintenance status
+    if (formData.status === 'in-progress') {
+      updateVehicle(formData.vehicleId, { status: 'maintenance' });
+    }
+    
     onSubmit(formData);
   };
+
+  // Filter out vehicles that are in use or already in maintenance
+  const availableVehicles = vehicles.filter(v => 
+    v.id === initialData?.vehicleId || // Include currently selected vehicle when editing
+    v.status === 'available'
+  );
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
@@ -58,7 +71,7 @@ export default function MaintenanceForm({ onSubmit, onClose, initialData }: Main
                 onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
               >
                 <option value="">Select Vehicle</option>
-                {vehicles.map((vehicle) => (
+                {availableVehicles.map((vehicle) => (
                   <option key={vehicle.id} value={vehicle.id}>
                     {vehicle.make} {vehicle.model} ({vehicle.licensePlate})
                   </option>

@@ -1,10 +1,12 @@
+type VehicleStatus = "available" | "in-use" | "maintenance" | string;
+
 export interface Vehicle {
   id: string;
   make: string;
   model: string;
   year: number;
   licensePlate: string;
-  status: 'available' | 'in-use' | 'maintenance';
+  status: VehicleStatus;
   fuelLevel: number;
   mileage: number;
   lastService: string;

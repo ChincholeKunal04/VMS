@@ -79,23 +79,77 @@ export const useStore = create<AppState>((set) => ({
       trips: state.trips.filter((t) => t.id !== id),
     })),
 
-  addMaintenanceRecord: (record) =>
-    set((state) => ({
-      maintenanceRecords: [
-        ...state.maintenanceRecords,
-        { ...record, id: `m${state.maintenanceRecords.length + 1}` },
-      ],  
-    })),
+    addMaintenanceRecord: (record) =>
+      set((state) => {
+        const newRecord = {
+          ...record,
+          id: `m${state.maintenanceRecords.length + 1}`
+        };
+  
+        // Update vehicle status if maintenance is in progress
+        if (record.status === 'in-progress') {
+          const updatedVehicles = state.vehicles.map(v =>
+            v.id === record.vehicleId ? { ...v, status: 'maintenance' } : v
+          );
+          return {
+            maintenanceRecords: [...state.maintenanceRecords, newRecord],
+            vehicles: updatedVehicles
+          };
+        }
+  
+        return {
+          maintenanceRecords: [...state.maintenanceRecords, newRecord]
+        };
+      }),
+  
+    updateMaintenanceRecord: (id, record) =>
+      set((state) => {
+        const updatedRecords = state.maintenanceRecords.map(r =>
+          r.id === id ? { ...r, ...record } : r
+        );
+  
+        // Find the affected record and update vehicle status accordingly
+        const affectedRecord = state.maintenanceRecords.find(r => r.id === id);
+        if (affectedRecord && record.status) {
+          const updatedVehicles = state.vehicles.map(v => {
+            if (v.id === affectedRecord.vehicleId) {
+              if (record.status === 'in-progress') {
+                return { ...v, status: 'maintenance' };
+              } else if (record.status === 'completed' || record.status === 'cancelled') {
+                return { ...v, status: 'available' };
+              }
+            }
+            return v;
+          });
+  
+          return {
+            maintenanceRecords: updatedRecords,
+            vehicles: updatedVehicles
+          };
+        }
+  
+        return { maintenanceRecords: updatedRecords };
+      }),
+  
+    removeMaintenanceRecord: (id) =>
+      set((state) => {
+        const recordToRemove = state.maintenanceRecords.find(r => r.id === id);
+        const updatedRecords = state.maintenanceRecords.filter(r => r.id !== id);
+  
+        // If removing an in-progress maintenance, update vehicle status
+        if (recordToRemove && recordToRemove.status === 'in-progress') {
+          const updatedVehicles = state.vehicles.map(v =>
+            v.id === recordToRemove.vehicleId ? { ...v, status: 'available' } : v
+          );
+          return {
+            maintenanceRecords: updatedRecords,
+            vehicles: updatedVehicles
+          };
+        }
+  
+        return { maintenanceRecords: updatedRecords };
+      }),
 
-  updateMaintenanceRecord: (id, record) =>
-    set((state) => ({
-      maintenanceRecords: state.maintenanceRecords.map((r) => (r.id === id ? {...r, ...record} : r)),
-    })),
-
-  removeMaintenanceRecord: (id) =>
-    set((state) => ({
-      maintenanceRecords: state.maintenanceRecords.filter((r) => r.id !== id),
-    })),
 
   updateInventory: (id, changes) =>
     set((state) => ({
