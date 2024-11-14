@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Filter, Car } from 'lucide-react';
+import { Plus, Search, Car } from 'lucide-react';
 import { useStore } from '../../store';
 import VehicleForm from './VehicleForm';
 import StatusBadge from '../shared/StatusBadge';
@@ -28,7 +28,7 @@ export default function VehicleList() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 mt-5 p-5">
         <h1 className="text-2xl font-bold text-gray-900">Vehicle Management</h1>
         <button
           onClick={() => setShowAddForm(true)}

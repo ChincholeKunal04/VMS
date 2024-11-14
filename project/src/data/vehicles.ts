@@ -45,5 +45,20 @@ export const vehicles: Vehicle[] = [
     fuelEfficiency: 50,
     insuranceExpiry: "",
     registrationExpiry: ""
+  },
+  {
+    id: 'v4',
+    make: 'Ford',
+    model: 'F-350',
+    year: 2022,
+    licensePlate: 'DEF496',
+    status: 'available',
+    fuelLevel: 60,
+    mileage: 33000,
+    lastService: '2024-03-01',
+    type: 'suv',
+    fuelEfficiency: 80,
+    insuranceExpiry: "",
+    registrationExpiry: ""
   }
 ];

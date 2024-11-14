@@ -1,15 +1,14 @@
 import React from 'react';
 import { Car, Fuel, Wrench, Activity } from 'lucide-react';
 import { Vehicle } from '../types';
-import VehicleList from './VehicleList';
+import VehicleList from '../components/VehicleManagement/VehicleList';
 import StatsCard from './StatsCard';
 
 interface DashboardProps {
   vehicles: Vehicle[];
-  onScheduleMaintenance: (vehicle: Vehicle) => void;
 }
 
-export default function Dashboard({ vehicles = [], onScheduleMaintenance }: DashboardProps) {
+export default function Dashboard({ vehicles = [] }: DashboardProps) {
   const stats = vehicles
   ? {
       total: vehicles.length,
@@ -53,10 +52,7 @@ export default function Dashboard({ vehicles = [], onScheduleMaintenance }: Dash
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">Vehicle Fleet</h2>
         </div>
-        <VehicleList
-          vehicles={vehicles}
-          onScheduleMaintenance={onScheduleMaintenance}
-        />
+        <VehicleList/>
       </div>
     </div>
   );
