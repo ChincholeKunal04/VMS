@@ -1,4 +1,4 @@
-type VehicleStatus = "available" | "in-use" | "maintenance" | string;
+type VehicleStatus = "available" | "in-use" | "maintenance";
 
 export interface Vehicle {
   id: string;
