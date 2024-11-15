@@ -1,4 +1,4 @@
-import React from 'react';
+import React  from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Dashboard from './components/Dashboard';
@@ -10,9 +10,10 @@ import InventoryManagement from './components/InventoryManagement';
 import Analytics from './components/Analytics';
 import AlertCenter from './components/AlertCenter';
 import { useAlerts } from './hooks/useAlerts';
+import { useEffect } from 'react';
+import Footer from './components/shared/Footer';
 
 function App() {
-
   useAlerts();
 
   return (
@@ -31,6 +32,7 @@ function App() {
             <Route path="/alerts" element={<AlertCenter />} />
           </Routes>
         </main>
+        <Footer />
       </div>
     </Router>
   );
