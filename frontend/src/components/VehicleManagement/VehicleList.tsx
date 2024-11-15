@@ -1,30 +1,70 @@
-import  { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Search, Car } from 'lucide-react';
 import { useStore } from '../../store';
 import VehicleForm from './VehicleForm';
 import StatusBadge from '../shared/StatusBadge';
+import axios from 'axios';
 
 export default function VehicleList() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  interface Vehicle {
+    id: number;
+    make: string;
+    model: string;
+    licensePlate: string;
+    status: 'available' | 'in-use' | 'maintenance' | 'on-trip' | 'off-duty' | 'planned' | 'in-progress' | 'completed' | 'cancelled' | 'scheduled';
+    type: string;
+    year: number;
+    lastService: string;
+  }
 
-  const vehicles = useStore((state) => state.vehicles);
-  const addVehicle = useStore((state) => state.addVehicle);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
 
-  const filteredVehicles = vehicles.filter((vehicle) => {
-    const matchesSearch = 
-      vehicle.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehicle.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehicle.licensePlate.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = !statusFilter || vehicle.status === statusFilter;
-    const matchesType = !typeFilter || vehicle.type === typeFilter;
+  useEffect(() => {
+    // Fetch vehicles from the server
+    axios.get('http://localhost:5000/api/vehicles')
+      .then(response => setVehicles(response.data))
+      .catch(error => console.error('Error fetching vehicles:', error));
+  }, []);
 
-    return matchesSearch && matchesStatus && matchesType;
-  });
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setStatusFilter(e.target.value);
+  };
+
+  const handleTypeFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setTypeFilter(e.target.value);
+  };
+
+  const filteredVehicles = vehicles.filter(vehicle => 
+    vehicle.make.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    (statusFilter ? vehicle.status === statusFilter : true) &&
+    (typeFilter ? vehicle.type === typeFilter : true)
+  );
+
+  const handleAddVehicle = (newVehicle: Vehicle) => {
+    setVehicles([...vehicles, newVehicle]);
+  };
+
+  const handleDeleteVehicle = async (id: number) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/vehicles/${id}`);
+      setVehicles(vehicles.filter(vehicle => vehicle.id !== id));
+    } catch (error) {
+      console.error('Error deleting vehicle:', error);
+    }
+  };
+
+  const handleUpdateVehicle = (updatedVehicle: Vehicle) => {
+    setVehicles(vehicles.map(vehicle => vehicle.id === updatedVehicle.id ? updatedVehicle : vehicle));
+  };
 
   return (
     <div>
@@ -49,13 +89,13 @@ export default function VehicleList() {
                 placeholder="Search vehicles..."
                 className="pl-10 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearchChange}
               />
             </div>
             <select
               className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={handleStatusFilterChange}
             >
               <option value="">All Statuses</option>
               <option value="available">Available</option>
@@ -65,7 +105,7 @@ export default function VehicleList() {
             <select
               className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
+              onChange={handleTypeFilterChange}
             >
               <option value="">All Types</option>
               <option value="sedan">Sedan</option>
@@ -117,6 +157,12 @@ export default function VehicleList() {
                     >
                       View Details
                     </Link>
+                    <button onClick={() => handleDeleteVehicle(vehicle.id)} className="text-red-600 hover:text-red-900 ml-4">
+                      Delete
+                    </button>
+                    <button onClick={() => handleUpdateVehicle(vehicle)} className="text-yellow-600 hover:text-yellow-900 ml-4">
+                      Update
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -128,7 +174,7 @@ export default function VehicleList() {
       {showAddForm && (
         <VehicleForm
           onSubmit={(data) => {
-            addVehicle(data);
+            setVehicles([...vehicles, { ...data, id: vehicles.length + 1 }]);
             setShowAddForm(false);
           }}
           onClose={() => setShowAddForm(false)}
