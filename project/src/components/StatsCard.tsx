@@ -4,7 +4,7 @@ interface StatsCardProps {
   title: string;
   value: number;
   icon: ReactNode;
-  trend: string;
+  trend: ReactNode;
 }
 
 export default function StatsCard({ title, value, icon, trend }: StatsCardProps) {

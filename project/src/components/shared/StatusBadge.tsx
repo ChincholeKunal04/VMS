@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface StatusBadgeProps {
-  status: 'available' | 'in-use' | 'maintenance' | 'on-trip' | 'off-duty' | 'planned' | 'in-progress' | 'completed' | 'cancelled' | 'scheduled';
+  status: 'available' | 'in-use' | 'maintenance' | 'on-trip' | 'off-duty' | 'planned' | 'in-progress' | 'completed' | 'cancelled' | 'scheduled' | 'new' | 'acknowledged' | 'resolved';
 }
 
 export default function StatusBadge({ status }: StatusBadgeProps) {

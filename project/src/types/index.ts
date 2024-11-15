@@ -75,12 +75,13 @@ export interface InventoryItem {
   compatibleVehicles: string[];
 }
 
+type alertStatus = 'new' | 'acknowledged' | 'resolved';
 export interface Alert {
   id: string;
   type: 'maintenance' | 'inventory' | 'license' | 'insurance' | 'registration';
   severity: 'low' | 'medium' | 'high';
   message: string;
   date: string;
-  status: 'new' | 'acknowledged' | 'resolved';
+  status: alertStatus
   relatedId?: string;
 }

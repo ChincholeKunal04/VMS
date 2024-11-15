@@ -1,111 +1,197 @@
 import React from 'react';
-import { BarChart, PieChart, Activity } from 'lucide-react';
-import { Vehicle } from '../types';
-import { useMemo } from 'react';
+import { useStore } from '../store';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  PointElement,
+  LineElement
+} from 'chart.js';
+import { Bar, Pie, Line } from 'react-chartjs-2';
+import { subMonths, format } from 'date-fns';
 
-interface AnalyticsProps {
-  vehicles: Vehicle[];
-}
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  PointElement,
+  LineElement
+);
 
-export default function Analytics({ vehicles = [] }: AnalyticsProps) {
-  if (vehicles.length === 0) {
-    return <div>No vehicle data available.</div>;
-  }
+export default function Analytics() {
+  const vehicles = useStore((state) => state.vehicles);
+  const maintenanceRecords = useStore((state) => state.maintenanceRecords);
+  const trips = useStore((state) => state.trips);
 
-  const typeDistribution = useMemo(() => {
-    return vehicles.reduce((acc, vehicle) => {
-      acc[vehicle.type] = (acc[vehicle.type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-  }, [vehicles]);
+  // Vehicle Type Distribution
+  const typeDistribution = vehicles.reduce((acc, vehicle) => {
+    acc[vehicle.type] = (acc[vehicle.type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
-  const averageFuelLevel = useMemo(() => {
-    return vehicles.reduce((sum, vehicle) => sum + vehicle.fuelLevel, 0) / vehicles.length;
-  }, [vehicles]);
+  const typeChartData = {
+    labels: Object.keys(typeDistribution).map(type => type.toUpperCase()),
+    datasets: [
+      {
+        data: Object.values(typeDistribution),
+        backgroundColor: [
+          'rgba(54, 162, 235, 0.8)',
+          'rgba(255, 99, 132, 0.8)',
+          'rgba(255, 206, 86, 0.8)',
+          'rgba(75, 192, 192, 0.8)',
+        ],
+      },
+    ],
+  };
 
-  const statusCount = useMemo(() => {
-    return vehicles.reduce((acc, vehicle) => {
-      acc[vehicle.status] = (acc[vehicle.status] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-  }, [vehicles]);
+  // Status Distribution
+  const statusCount = vehicles.reduce((acc, vehicle) => {
+    acc[vehicle.status] = (acc[vehicle.status] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const statusChartData = {
+    labels: Object.keys(statusCount).map(status => status.replace('-', ' ').toUpperCase()),
+    datasets: [
+      {
+        data: Object.values(statusCount),
+        backgroundColor: [
+          'rgba(75, 192, 192, 0.8)',
+          'rgba(255, 206, 86, 0.8)',
+          'rgba(255, 99, 132, 0.8)',
+        ],
+      },
+    ],
+  };
+
+  // Monthly Maintenance Costs
+  const last6Months = Array.from({ length: 6 }, (_, i) => {
+    const date = subMonths(new Date(), i);
+    return format(date, 'MMM yyyy');
+  }).reverse();
+
+  const monthlyMaintenanceCosts = last6Months.map(month => {
+    return maintenanceRecords
+      .filter(record => format(new Date(record.date), 'MMM yyyy') === month)
+      .reduce((sum, record) => sum + record.cost, 0);
+  });
+
+  const maintenanceCostData = {
+    labels: last6Months,
+    datasets: [
+      {
+        label: 'Maintenance Costs ($)',
+        data: monthlyMaintenanceCosts,
+        borderColor: 'rgb(75, 192, 192)',
+        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+      },
+    ],
+  };
+
+  // Monthly Trip Statistics
+  const monthlyTrips = last6Months.map(month => {
+    return trips
+      .filter(trip => 
+        format(new Date(trip.startTime), 'MMM yyyy') === month &&
+        trip.status === 'completed'
+      ).length;
+  });
+
+  const tripData = {
+    labels: last6Months,
+    datasets: [
+      {
+        label: 'Completed Trips',
+        data: monthlyTrips,
+        borderColor: 'rgb(54, 162, 235)',
+        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+      },
+    ],
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Fleet Composition Chart */}
-        <div className="bg-white p-6 rounded-lg shadow">
-           <div className="flex items-center justify-between mb-4">
-             <h3 className="text-lg font-medium text-gray-900">Fleet Composition</h3>
-             <PieChart className="h-5 w-5 text-gray-400" />
-           </div>
-           <div className="space-y-4">
-             {Object.entries(typeDistribution).map(([type, count]) => (
-            <div key={type}>
-              <div className="flex justify-between text-sm font-medium text-gray-600">
-                <span className="capitalize">{type}</span>
-                <span>{count} vehicles</span>
-              </div>
-              <div className="mt-1 w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-indigo-600 h-2 rounded-full"
-                  style={{ width: `${(count / vehicles.length) * 100}%` }}
-                ></div>
-              </div>
-            </div>
-          ))}
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Fleet Composition</h3>
+        <div className="h-64">
+          <Pie
+            data={typeChartData}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'bottom',
+                },
+              },
+            }}
+          />
         </div>
       </div>
 
-      
-        {/* Fleet Status Chart */}
-        <div className="bg-white p-6 rounded-lg shadow">
-           <div className="flex items-center justify-between mb-4">
-             <h3 className="text-lg font-medium text-gray-900">Fleet Status</h3>
-             <BarChart className="h-5 w-5 text-gray-400" />
-           </div>
-           <div className="space-y-4">
-             {Object.entries(statusCount).map(([status, count]) => (
-            <div key={status}>
-              <div className="flex justify-between text-sm font-medium text-gray-600">
-                <span className="capitalize">{status.replace('-', ' ')}</span>
-                <span>{count} vehicles</span>
-              </div>
-              <div className="mt-1 w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-indigo-600 h-2 rounded-full"
-                  style={{ width: `${(count / vehicles.length) * 100}%` }}
-                ></div>
-              </div>
-            </div>
-          ))}
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Vehicle Status</h3>
+        <div className="h-64">
+          <Pie
+            data={statusChartData}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'bottom',
+                },
+              },
+            }}
+          />
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow md:col-span-2">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium text-gray-900">Fleet Performance</h3>
-          <Activity className="h-5 w-5 text-gray-400" />
+      <div className="md:col-span-2">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Maintenance Costs (6 Months)</h3>
+        <div className="h-64">
+          <Line
+            data={maintenanceCostData}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                },
+              },
+            }}
+          />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="text-sm font-medium text-gray-600 mb-2">Average Fuel Level</div>
-            <div className="text-2xl font-bold text-indigo-600">{averageFuelLevel.toFixed(1)}%</div>
-          </div>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="text-sm font-medium text-gray-600 mb-2">Total Mileage</div>
-            <div className="text-2xl font-bold text-indigo-600">
-              {vehicles.reduce((sum, vehicle) => sum + vehicle.mileage, 0).toLocaleString()} km
-            </div>
-          </div>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="text-sm font-medium text-gray-600 mb-2">Maintenance Rate</div>
-            <div className="text-2xl font-bold text-indigo-600">
-              {((statusCount["maintenance"] || 0) / vehicles.length * 100).toFixed(1)}%
-            </div>
-          </div>
+      </div>
+
+      <div className="md:col-span-2">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Trip Statistics (6 Months)</h3>
+        <div className="h-64">
+          <Bar
+            data={tripData}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                },
+              },
+            }}
+          />
         </div>
       </div>
     </div>
-    
   );
 }

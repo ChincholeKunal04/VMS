@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { Vehicle, Driver, Trip, MaintenanceRecord, InventoryItem, Alert } from '../types';
-import { vehicles as initialVehicles } from '../data/vehicles';
 
 interface AppState {
   vehicles: Vehicle[];
@@ -21,13 +20,16 @@ interface AppState {
   addMaintenanceRecord: (record: Omit<MaintenanceRecord, 'id'>) => void;
   updateMaintenanceRecord: (id: string, record: Partial<MaintenanceRecord>) => void;
   removeMaintenanceRecord: (id: string) => void;
+  addInventoryItem: (item: Omit<InventoryItem, 'id'>) => void;
   updateInventory: (id: string, changes: Partial<InventoryItem>) => void;
+  removeInventoryItem: (id: string) => void;
   addAlert: (alert: Omit<Alert, 'id'>) => void;
-  updateAlertStatus: (id: string, status: Alert['status']) => void;
+  updateAlert: (id: string, changes: Partial<Alert>) => void;
+  removeAlert: (id: string) => void;
 }
 
 export const useStore = create<AppState>((set) => ({
-  vehicles: initialVehicles,
+  vehicles: [],
   drivers: [],
   trips: [],
   maintenanceRecords: [],
@@ -150,6 +152,10 @@ export const useStore = create<AppState>((set) => ({
         return { maintenanceRecords: updatedRecords };
       }),
 
+  addInventoryItem: (item) =>
+    set((state) => ({
+      inventory: [...state.inventory, { ...item, id: `i${state.inventory.length + 1}` }],
+    })),
 
   updateInventory: (id, changes) =>
     set((state) => ({
@@ -158,15 +164,29 @@ export const useStore = create<AppState>((set) => ({
       ),
     })),
 
-  addAlert: (alert) =>
+  removeInventoryItem: (id) =>
     set((state) => ({
-      alerts: [...state.alerts, { ...alert, id: `a${state.alerts.length + 1}` }],
+      inventory: state.inventory.filter((item) => item.id !== id),
     })),
 
-  updateAlertStatus: (id, status) =>
+  addAlert: (alert) =>
+    set((state) => ({
+      alerts: [
+        ...state.alerts,
+        { ...alert, id: `a${state.alerts.length + 1}`, date: new Date().toISOString() },
+      ],
+    })),
+
+  updateAlert: (id, changes) =>
     set((state) => ({
       alerts: state.alerts.map((alert) =>
-        alert.id === id ? { ...alert, status } : alert
+        alert.id === id ? { ...alert, ...changes } : alert
       ),
     })),
+
+  removeAlert: (id) =>
+    set((state) => ({
+      alerts: state.alerts.filter((alert) => alert.id !== id),
+    })),
+    
 }));
