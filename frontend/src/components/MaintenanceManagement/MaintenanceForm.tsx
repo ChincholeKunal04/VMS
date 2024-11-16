@@ -1,18 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlusCircle, X, Calendar, Car, DollarSign, User } from 'lucide-react';
 import { useStore } from '../../store';
 import { MaintenanceRecord } from '../../types';
+import axios from 'axios';
 
 interface MaintenanceFormProps {
-  onSubmit: (record: Omit<MaintenanceRecord, 'id'>) => void;
+  onSubmit: (record: MaintenanceRecord) => void;
   onClose: () => void;
   initialData?: MaintenanceRecord;
 }
 
 export default function MaintenanceForm({ onSubmit, onClose, initialData }: MaintenanceFormProps) {
-  const vehicles = useStore((state) => state.vehicles);
-  const inventory = useStore((state) => state.inventory);
+  const [vehicles, setVehicles] = useState<{ id: string; make: string; model: string; licensePlate: string }[]>([]);
   const updateVehicle = useStore((state) => state.updateVehicle);
+
+  useEffect(() => {
+    // Fetch vehicles from the server
+    axios.get('http://localhost:5000/api/vehicles')
+      .then(response => setVehicles(response.data))
+      .catch(error => console.error('Error fetching vehicles:', error));
+  }, []);
 
   const [formData, setFormData] = useState<Omit<MaintenanceRecord, 'id'>>({
     vehicleId: initialData?.vehicleId || '',
@@ -22,26 +29,25 @@ export default function MaintenanceForm({ onSubmit, onClose, initialData }: Main
     status: initialData?.status || 'scheduled',
     cost: initialData?.cost || 0,
     technicianName: initialData?.technicianName || '',
-    partsUsed: initialData?.partsUsed || [],
+    partsUsed: Array.isArray(initialData?.partsUsed) ? initialData.partsUsed : [],
     notes: initialData?.notes || ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Update vehicle status based on maintenance status
-    if (formData.status === 'in-progress') {
-      updateVehicle(formData.vehicleId, { status: 'maintenance' });
-    }
-    
-    onSubmit(formData);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Filter out vehicles that are in use or already in maintenance
-  const availableVehicles = vehicles.filter(v => 
-    v.id === initialData?.vehicleId || // Include currently selected vehicle when editing
-    v.status === 'available'
-  );
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post('http://localhost:5000/api/maintenancerecords', formData);
+      onSubmit(response.data);
+      onClose();
+    } catch (error) {
+      console.error('Error submitting maintenance record:', error);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
@@ -66,12 +72,13 @@ export default function MaintenanceForm({ onSubmit, onClose, initialData }: Main
               </label>
               <select
                 required
+                name="vehicleId"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 value={formData.vehicleId}
-                onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
+                onChange={handleChange}
               >
                 <option value="">Select Vehicle</option>
-                {availableVehicles.map((vehicle) => (
+                {vehicles.map((vehicle) => (
                   <option key={vehicle.id} value={vehicle.id}>
                     {vehicle.make} {vehicle.model} ({vehicle.licensePlate})
                   </option>
@@ -89,24 +96,25 @@ export default function MaintenanceForm({ onSubmit, onClose, initialData }: Main
               <input
                 type="date"
                 required
+                name="date"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                onChange={handleChange}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 <div className="flex items-center gap-2 mb-1">
-                  {/* <Tool className="h-4 w-4" /> */}
                   Maintenance Type
                 </div>
               </label>
               <select
                 required
+                name="type"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value as MaintenanceRecord['type'] })}
+                onChange={handleChange}
               >
                 <option value="routine">Routine</option>
                 <option value="repair">Repair</option>
@@ -124,9 +132,10 @@ export default function MaintenanceForm({ onSubmit, onClose, initialData }: Main
               <input
                 type="text"
                 required
+                name="technicianName"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 value={formData.technicianName}
-                onChange={(e) => setFormData({ ...formData, technicianName: e.target.value })}
+                onChange={handleChange}
               />
             </div>
 
@@ -142,9 +151,10 @@ export default function MaintenanceForm({ onSubmit, onClose, initialData }: Main
                 required
                 min="0"
                 step="0.01"
+                name="cost"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 value={formData.cost}
-                onChange={(e) => setFormData({ ...formData, cost: parseFloat(e.target.value) })}
+                onChange={handleChange}
               />
             </div>
 
@@ -152,9 +162,10 @@ export default function MaintenanceForm({ onSubmit, onClose, initialData }: Main
               <label className="block text-sm font-medium text-gray-700">Status</label>
               <select
                 required
+                name="status"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as MaintenanceRecord['status'] })}
+                onChange={handleChange}
               >
                 <option value="scheduled">Scheduled</option>
                 <option value="in-progress">In Progress</option>
@@ -168,9 +179,10 @@ export default function MaintenanceForm({ onSubmit, onClose, initialData }: Main
               <textarea
                 required
                 rows={3}
+                name="description"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={handleChange}
               />
             </div>
 
@@ -178,9 +190,10 @@ export default function MaintenanceForm({ onSubmit, onClose, initialData }: Main
               <label className="block text-sm font-medium text-gray-700">Notes</label>
               <textarea
                 rows={2}
+                name="notes"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                onChange={handleChange}
               />
             </div>
           </div>

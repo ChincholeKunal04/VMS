@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PlusCircle, X } from 'lucide-react';
 import { Driver } from '../../types';
+import axios from 'axios';
 
 interface DriverFormProps {
   onSubmit: (driver: Omit<Driver, 'id'>) => void;
@@ -22,9 +23,26 @@ export default function DriverForm({ onSubmit, onClose, initialData }: DriverFor
     emergencyContact: initialData?.emergencyContact || ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    try {
+      const response = await fetch('http://localhost:5000/api/drivers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+      if (response.ok) {
+        // Success handling
+        onSubmit(formData);
+      } else {
+        // Error handling
+        console.error('Failed to submit driver data');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
 
   return (
