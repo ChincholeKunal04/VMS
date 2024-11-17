@@ -1,3 +1,5 @@
+// index.tsx
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import TripList from './TripList';
@@ -8,7 +10,7 @@ export default function TripManagement() {
   return (
     <Routes>
       <Route path="/" element={<TripList />} />
-      <Route path="/plan" element={<TripPlanner />} />
+      <Route path="/plan" element={<TripPlanner onSubmit={() => {}} onClose={() => {}} />} />
       <Route path="/:id" element={<TripDetails />} />
     </Routes>
   );

@@ -141,6 +141,34 @@ export default function DriverForm({ onSubmit, onClose, initialData }: DriverFor
                 onChange={(e) => setFormData({ ...formData, joinDate: e.target.value })}
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Rating</label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                max="5"
+                required
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                value={formData.rating}
+                onChange={(e) =>
+                  setFormData({ ...formData, rating: parseFloat(e.target.value) })
+                }
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Total Trips</label>
+              <input
+                type="number"
+                min="0"
+                required
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                value={formData.totalTrips}
+                onChange={(e) =>
+                  setFormData({ ...formData, totalTrips: parseInt(e.target.value, 10) })
+                }
+              />
+            </div>
           </div>
 
           <div className="flex justify-end space-x-4">

@@ -1,51 +1,65 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Calendar, User, Car, Route } from 'lucide-react';
-import { useStore } from '../../store';
-import { Trip } from '../../types';
+import { Driver, Vehicle, Trip } from '../../types';
 
-interface TripProps{
-  onSubmit: (trip: Omit<Trip, 'id'>) => void;
+interface TripPlannerProps {
+  onSubmit: (trip: Trip) => void;
   onClose: () => void;
-  initialData?: Trip;
 }
 
-export default function TripPlanner({ onSubmit, onClose, initialData }: TripProps) {
+export default function TripPlanner({ onSubmit, onClose }: TripPlannerProps) {
   const navigate = useNavigate();
-  const vehicles = useStore((state) => state.vehicles.filter(v => v.status === 'available'));
-  const drivers = useStore((state) => state.drivers.filter(d => d.status === 'available'));
-  const addTrip = useStore((state) => state.addTrip);
-  const updateTrip = useStore((state) => state.updateTrip);
-  const updateVehicle = useStore((state) => state.updateVehicle);
-  const updateDriver = useStore((state) => state.updateDriver);
-
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
   const [formData, setFormData] = useState<Omit<Trip, 'id'>>({
-    vehicleId: initialData?.vehicleId ||  '',
-    driverId: initialData?.driverId || '',
-    startTime: initialData?.startTime || new Date().toISOString().slice(0, 16),
-    endTime: initialData?.endTime || '',
-    startLocation: initialData?.startLocation || '',
-    endLocation: initialData?.endLocation || '',
-    distance: initialData?.distance || 0,
+    vehicleId: '',
+    driverId: '',
+    startLocation: '',
+    endLocation: '',
+    startTime: '',
+    endTime: '',
+    distance: 0,
     status: 'planned',
-    purpose: initialData?.purpose || '',
-    notes: initialData?.notes || ''
+    purpose: '',
+    notes: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Fetch vehicles and drivers when component mounts
+  useEffect(() => {
+    // Fetch vehicles
+    fetch('http://localhost:5000/api/vehicles')
+      .then((response) => response.json())
+      .then((data) => setVehicles(data))
+      .catch((error) => console.error('Error fetching vehicles:', error));
+
+    // Fetch drivers
+    fetch('http://localhost:5000/api/drivers')
+      .then((response) => response.json())
+      .then((data) => setDrivers(data))
+      .catch((error) => console.error('Error fetching drivers:', error));
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Add or u[date the trip
-    initialData ? updateTrip(initialData.id ,formData) : addTrip(formData);
 
-    // Update vehicle and driver status
-    updateVehicle(formData.vehicleId, { status: 'in-use' });
-    updateDriver(formData.driverId, { 
-      status: 'on-trip',
-      assignedVehicleId: formData.vehicleId
-    });
+    try {
+      const response = await fetch('http://localhost:5000/api/trips', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
 
-    navigate('/trips');
+      if (response.ok) {
+        const newTrip: Trip = await response.json();
+        onSubmit(newTrip);
+        onClose();
+      } else {
+        console.error('Failed to add trip:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error submitting trip:', error);
+    }
   };
 
   return (
@@ -53,7 +67,7 @@ export default function TripPlanner({ onSubmit, onClose, initialData }: TripProp
       <div className="bg-white shadow rounded-lg">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900">
-            {initialData ? 'Edit the trip' : 'Plan new trip'}
+            Plan new trip
           </h2>
         </div>
 
@@ -219,7 +233,7 @@ export default function TripPlanner({ onSubmit, onClose, initialData }: TripProp
               type="submit"
               className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
             >
-              {initialData ? 'Update trip' : 'Add trip'}
+              Add trip
             </button>
           </div>
         </form>

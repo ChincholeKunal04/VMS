@@ -1,17 +1,39 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { Plus, Search, Users, Star } from 'lucide-react';
-import { useStore } from '../../store';
+import { Link } from 'react-router-dom';
 import DriverForm from './DriverForm';
 import StatusBadge from '../shared/StatusBadge';
+
+interface Driver {
+  id: number;
+  name: string;
+  licenseNumber: string;
+  licenseExpiry: string;
+  contactNumber: string;
+  email: string;
+  status: string;
+  rating: number;
+  totalTrips: number;
+  joinDate: string;
+  emergencyContact: string;
+}
 
 export default function DriverList() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [drivers, setDrivers] = useState<Driver[]>([]);
 
-  const drivers = useStore((state) => state.drivers);
-  const addDriver = useStore((state) => state.addDriver);
+  useEffect(() => {
+    console.log('DriverList component mounted');
+    fetch('http://localhost:5000/api/drivers')
+      .then((response) => response.json())
+      .then((data: Driver[]) => {
+        console.log('Fetched drivers:', data);
+        setDrivers(data);
+      })
+      .catch((error) => console.error('Error fetching drivers:', error));
+  }, []);
 
   const filteredDrivers = drivers.filter((driver) => {
     const matchesSearch = 
@@ -23,18 +45,29 @@ export default function DriverList() {
     return matchesSearch && matchesStatus;
   });
 
+  const handleAddDriver = (newDriver: Omit<Driver, 'id'>) => {
+    const newDriverWithId = { ...newDriver, id: drivers.length + 1 };
+    setDrivers([...drivers, newDriverWithId]);
+    setShowAddForm(false);
+  };
+
   return (
     <div>
+      <h1>Driver List</h1>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Driver Management</h1>
         <button
           onClick={() => setShowAddForm(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+          className="flex items-center bg-blue-500 text-white px-4 py-2 rounded"
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="mr-2" />
           Add Driver
         </button>
       </div>
+
+      {showAddForm && (
+        <DriverForm onSubmit={handleAddDriver} onClose={() => setShowAddForm(false)} />
+      )}
 
       <div className="bg-white rounded-lg shadow mb-6">
         <div className="p-4 border-b border-gray-200">
@@ -116,16 +149,6 @@ export default function DriverList() {
           </table>
         </div>
       </div>
-
-      {showAddForm && (
-        <DriverForm
-          onSubmit={(data) => {
-            addDriver(data);
-            setShowAddForm(false);
-          }}
-          onClose={() => setShowAddForm(false)}
-        />
-      )}
     </div>
   );
 }
